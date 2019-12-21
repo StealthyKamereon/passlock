@@ -1,0 +1,90 @@
+# You can change messages here
+# Here are codes for colors:
+# "#0" = BLACK
+# "#1" = DARK_BLUE
+# "#2" = DARK_GREEN
+# "#3" = DARK_AQUA
+# "#4" = DARK_RED
+# "#5" = DARK_PURPLE
+# "#6" = GOLD
+# "#7" = GRAY
+# "#8" = DARK_GRAY
+# "#9" = BLUE
+# "#a" = GREEN
+# "#b" = AQUA
+# "#c" = RED
+# "#d" = LIGHT_PURPLE
+# "#e" = YELLOW
+# "#f" = WHITE
+# "#k" = MAGIC
+# "#l" = BOLD
+# "#m" = STRIKETHROUGH
+# "#n" = UNDERLINE
+# "#o" = ITALIC
+# "#r" = RESET
+
+# Other options
+ownerNeedCode: true
+itemMaxAmount: 9
+lockingLimitEnabled: false
+ownerAlerted: true
+useEconomy: false
+unlockingPaysBack: true
+
+prefix: "#7[PassLock]"
+lockInventoryTitle: "Enter your code :"
+priceTitle: " (cost : %c)"
+baseInventoryTitle: "Code :"
+changeTitle: "#8Put the new items :"
+changedLockingInventory: "#aInventory succesfully changed !"
+changingFailed: "#cAn item is missing !"
+plockCommand: "Click on the block to lock it."
+punlockCommand: "Click on the block to unlock it."
+wrongCode: "#cWrong Code"
+rightCode: "#aRight Code"
+breakMessage: "#cYou can't break that block"
+blockLocked: "Block locked"
+blockUnlocked: "Block unlocked"
+blockAlreadyLocked: "This block is already locked"
+blockNotLocked: "This block is not locked"
+blockNotLockable: "This block is not lockable"
+dontOwnMessage: "You don't own this block"
+reload: "Reload successful !"
+noPermissions: "#cYou don't have permissions to do that."
+setLockable: "Click on the block you want to be able to lock"
+removeLockable: "Click on the block you don't want to be able to lock"
+nowLockable: "This block is now lockable"
+noLongerLockable: "This block is no longer lockable"
+lockingLimitReached: "You already own the maximum number of locks."
+robbingAlert: "#c%player is trying to open your %block at %location !"
+resetConfig: "#aConfiguration succesfully reset !"
+notEnoughMoney: "#cYou don't have enough money !"
+priceMessage: "A lock cost %p"
+calculation: "Calculation succesful !"
+watchTitle: "Content of %p's chest"
+ownerAsking: "Click on the block to know its owner."
+ownerMessage: "The owner is %p"
+lockables:
+- DARK_OAK_DOOR
+- SPRUCE_DOOR
+- TRAPPED_CHEST
+- CHEST
+- ACACIA_DOOR
+- JUNGLE_DOOR
+- BIRCH_DOOR
+- WOODEN_DOOR
+- IRON_DOOR_BLOCK
+- TRAP_DOOR
+- FURNACE
+- WORKBENCH
+- FENCE_GATE
+- ACACIA_FENCE_GATE
+- DARK_OAK_FENCE_GATE
+- JUNGLE_FENCE_GATE
+- BIRCH_FENCE_GATE
+- SPRUCE_FENCE_GATE
+inventory:
+- DIRT
+- COBBLESTONE
+- STONE
+- SLIME_BLOCK

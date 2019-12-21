@@ -1,0 +1,14 @@
+#6====================#nPassLock Plugin#r#6====================
+#7PassLock allows you to lock your blocks thanks to a item based code.
+#7Use right-click and left-click to change the item's number.
+
+List of commands :
+lock : #7To lock block 
+unlock : #7To unlock block 
+help : #7Show this message
+reload : #7Apply changes to the config and reload the plugin
+setLockable : #7Allow to lock a type of block 
+unsetLockable : #7Disable the "lockability" of a type of block
+changeLockingInventory : #7Change the locking window 
+resetConfig : #7Reset the configuration file without restarting server
+recalculate : #7Recalculate the number of locks of every players

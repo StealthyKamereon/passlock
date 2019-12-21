@@ -1,0 +1,10 @@
+name: PassLock
+author: Kamereon
+version : 1.16.2
+main: fr.Kamereon.PassLock.PassLockPlugin
+depend: [Vault]
+
+commands:
+  passlock:
+    description: Basic command for passlock
+    usage: /passlock [lock|unlock|help|...]
