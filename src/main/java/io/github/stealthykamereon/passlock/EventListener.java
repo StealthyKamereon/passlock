@@ -42,7 +42,7 @@ public class EventListener implements Listener{
     public List<Player> watchingPlayer;
     public List<Player> ownerPlayer;
     private CodeManager codeManager;
-    private DyeColor[] colors = {DyeColor.WHITE, DyeColor.SILVER, DyeColor.GRAY, DyeColor.BLACK, DyeColor.RED,
+    private DyeColor[] colors = {DyeColor.WHITE, DyeColor.LIGHT_GRAY, DyeColor.GRAY, DyeColor.BLACK, DyeColor.RED,
             DyeColor.ORANGE, DyeColor.YELLOW, DyeColor.LIME, DyeColor.GREEN, DyeColor.LIGHT_BLUE, DyeColor.CYAN,
             DyeColor.BLUE, DyeColor.PURPLE, DyeColor.MAGENTA, DyeColor.PINK, DyeColor.BROWN};
     private Economy economy;
@@ -138,7 +138,7 @@ public class EventListener implements Listener{
                                     e.setCancelled(false);
                                     return;
                                 }
-                            }else if(type == Material.TRAP_DOOR){
+                            }else if(type == Material.OAK_TRAPDOOR){
                                 TrapDoor trap = (TrapDoor)clickedBlock.getState().getData();
                                 if (trap.isOpen()){
                                     e.setCancelled(false);
@@ -300,9 +300,9 @@ public class EventListener implements Listener{
                 e.setCancelled(true);
                 return;
             }
-            if ((e.getCursor() != null && e.getCurrentItem() != null) && (e.getInventory().getName() ==
-                    codeManager.BASETITLE || e.getInventory().getName().startsWith(codeManager.LOCKTITLE)) ||
-                    e.getInventory().getName() == codeManager.CHANGETITLE){
+            if ((e.getCursor() != null && e.getCurrentItem() != null) && (e.getView().getTitle()) ==
+                    codeManager.BASETITLE || e.getView().getTitle().startsWith(codeManager.LOCKTITLE) ||
+                    e.getView().getTitle() == codeManager.CHANGETITLE){
                 Inventory inv;
                 ItemStack clicked;
                 ItemMeta clickedMeta;
@@ -318,14 +318,14 @@ public class EventListener implements Listener{
                     return;
                 }
 
-                if(name.equals(ChatColor.RED+"This slot must stay empty") && inv.getName() == codeManager.CHANGETITLE){
+                if(name.equals(ChatColor.RED+"This slot must stay empty") && e.getView().getTitle() == codeManager.CHANGETITLE){
                     e.setCancelled(true);
 
                 }
 
 
                 //si l'inventaire est celui du code
-                if(inv.getName() == codeManager.BASETITLE){
+                if(e.getView().getTitle() == codeManager.BASETITLE){
                     if (name.equals(ChatColor.GRAY + "Code")){
                         e.setCancelled(true);
                         if (e.getClick().isLeftClick() && clicked.getAmount()<main.getConfig().getInt("itemMaxAmount")){
@@ -358,7 +358,7 @@ public class EventListener implements Listener{
                         if(code.equals(codeManager.getPass(loc))){
                             p.sendMessage(codeManager.PREFIX+codeManager.RIGHT);
                             Block block = loc.getBlock();
-                            if (codeManager.isDoor(block.getType()) || block.getType() == Material.TRAP_DOOR){
+                            if (codeManager.isDoor(block.getType()) || block.getType() == Material.OAK_TRAPDOOR){
                                 BlockState state = loc.getBlock().getState();
                                 Openable open = (Openable) state.getData();
                                 open.setOpen(true);
@@ -369,10 +369,10 @@ public class EventListener implements Listener{
                                 Chest chest = (Chest) block.getState();
 
                                 p.openInventory(chest.getInventory());
-                            }else if(block.getType() == Material.FURNACE || block.getType() == Material.BURNING_FURNACE) {
+                            }else if(block.getType() == Material.FURNACE) {
                                 Furnace fur = (Furnace) block.getState();
                                 p.openInventory(fur.getInventory());
-                            }else if(block.getType() == Material.WORKBENCH){
+                            }else if(block.getType() == Material.CRAFTING_TABLE){
                                 p.openWorkbench(block.getLocation(),true);
                             }else
                                 p.closeInventory();
@@ -390,7 +390,7 @@ public class EventListener implements Listener{
                     }
 
                 //Si l'inventaire est celui du verrouillage
-                }else if (inv.getName().startsWith(codeManager.LOCKTITLE)){
+                }else if (e.getView().getTitle().startsWith(codeManager.LOCKTITLE)){
                     if (name.equals (ChatColor.GRAY + "Code")){
                         e.setCancelled(true);
 
@@ -469,7 +469,7 @@ public class EventListener implements Listener{
         if(watchingPlayer.contains(p)){
             watchingPlayer.remove(p);
         }
-        if (inv.getName().equals(codeManager.CHANGETITLE) && inv.getType() == InventoryType.HOPPER){
+        if (e.getView().getTitle().equals(codeManager.CHANGETITLE) && inv.getType() == InventoryType.HOPPER){
             codeManager.setChangeInventory(inv, (Player)e.getPlayer());
         }
     }

@@ -220,7 +220,7 @@ public class CodeManager {
 
     public boolean isDoor(Material type){
         boolean isDoor = false;
-        Material[] doors = {Material.WOODEN_DOOR, Material.ACACIA_DOOR, Material.BIRCH_DOOR, Material.DARK_OAK_DOOR,
+        Material[] doors = {Material.OAK_DOOR, Material.ACACIA_DOOR, Material.BIRCH_DOOR, Material.DARK_OAK_DOOR,
                 Material.JUNGLE_DOOR, Material.SPRUCE_DOOR, Material.IRON_DOOR};
         for (Material door : doors){
             if(type == door){
