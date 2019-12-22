@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact name="passlock:jar">
+    <output-path>$PROJECT_DIR$/../server/plugins</output-path>
+    <root id="root">
+      <element id="archive" name="passlock.jar">
+        <element id="module-output" name="passlock" />
+        <element id="library" level="project" name="Maven: com.udojava:EvalEx:2.1" />
+      </element>
+    </root>
+  </artifact>
+</component>

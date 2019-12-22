@@ -1,7 +1,7 @@
 name: PassLock
 author: Kamereon
 version : 1.16.2
-main: fr.Kamereon.PassLock.PassLockPlugin
+main: io.github.stealthykamereon.passlock.PassLock
 depend: [Vault]
 
 commands:
