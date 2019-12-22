@@ -1,0 +1,59 @@
+# You can change messages here
+# Here are codes for colors:
+# "#0" = BLACK
+# "#1" = DARK_BLUE
+# "#2" = DARK_GREEN
+# "#3" = DARK_AQUA
+# "#4" = DARK_RED
+# "#5" = DARK_PURPLE
+# "#6" = GOLD
+# "#7" = GRAY
+# "#8" = DARK_GRAY
+# "#9" = BLUE
+# "#a" = GREEN
+# "#b" = AQUA
+# "#c" = RED
+# "#d" = LIGHT_PURPLE
+# "#e" = YELLOW
+# "#f" = WHITE
+# "#k" = MAGIC
+# "#l" = BOLD
+# "#m" = STRIKETHROUGH
+# "#n" = UNDERLINE
+# "#o" = ITALIC
+# "#r" = RESET
+
+prefix: "#7[PassLock]"
+lockInventoryTitle: "Entrez votre code :"
+priceTitle: " (coût : %c)"
+baseInventoryTitle: "Code :"
+changeTitle: "#8Insérez les nouveaux objets :"
+changedLockingInventory: "#aInventaire changé avec succès !"
+changingFailed: "#cIl manque un objet !"
+plockCommand: "Cliquez sur le bloc pour le verrouiller."
+punlockCommand: "Cliquez sur le bloc pour le déverrouiller."
+wrongCode: "#cCode incorrect"
+rightCode: "#aCode correct"
+breakMessage: "#cVous ne pouvez pas casser ce bloc."
+blockLocked: "Bloc verrouillé"
+blockUnlocked: "Bloc déverrouillé"
+blockAlreadyLocked: "Ce bloc est déjà verrouillé"
+blockNotLocked: "Ce bloc n'est pas verrouillé"
+blockNotLockable: "Ce bloc n'est pas verrouillable"
+dontOwnMessage: "Vous n'êtes pas le propriétaire du bloc"
+reload: "Rechargement accomplit !"
+noPermissions: "#cVous n'avez pas les permissions pour faire cela."
+setLockable: "Cliquez sur le bloc que vous voulez rendre verrouillable"
+removeLockable: "Cliquez sur le bloc que vous voulez rendre non verrouillable"
+nowLockable: "Ce bloc est maintenant verrouillable"
+noLongerLockable: "Ce bloc n'est plus verrouillable"
+lockingLimitReached: "Vous avez atteint le nombre maximum de verrous."
+robbingAlert: "#c%player est entrain de voler votre %block en %location !"
+resetConfig: "#aConfiguration réinitialisée !"
+notEnoughMoney: "#cVous n'avez pas assez d'argent !"
+priceMessage: "Un verrou coûte %p"
+watchTitle: "Contenu du conteneur de %p"
+ownerAsking: "Cliquez sur le bloc pour connaître le propriétaire."
+ownerMessage: "Le propriétaire est %p"
+codeItem: "#7Code"
+confirmationItem: "#aConfirmer"

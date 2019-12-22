@@ -21,6 +21,7 @@ public class PassLock extends JavaPlugin{
     private EventListener listener;
     public static Economy economy = null;
     private CodeManager code;
+    private LocaleManager localeManager;
     public FileConfiguration data, locks;
     private String helpMessage;
     private Permission permissionLock = new Permission("passlock.lock");
@@ -85,7 +86,7 @@ public class PassLock extends JavaPlugin{
                 e.printStackTrace();
             }
         }
-
+        this.loadLocale();
         data = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "data.yml"));
         locks = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "locks.yml"));
         this.code = new CodeManager(this, data, locks);
@@ -105,6 +106,10 @@ public class PassLock extends JavaPlugin{
         pm.addPermission(permissionRecalculate);
         pm.addPermission(permissionWatch);
 
+    }
+
+    private void loadLocale() {
+        !todo
     }
 
     public void onDisable(){
@@ -157,6 +162,10 @@ public class PassLock extends JavaPlugin{
 
     protected CodeManager getCodeManager(){
         return this.code;
+    }
+
+    protected LocaleManager getLocaleManager(){
+        return this.localeManager;
     }
 
     @Override
