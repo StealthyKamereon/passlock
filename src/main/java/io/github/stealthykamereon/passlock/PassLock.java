@@ -1,7 +1,13 @@
 package io.github.stealthykamereon.passlock;
 
+import io.github.stealthykamereon.passlock.command.*;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -14,15 +20,18 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 
 import java.io.*;
+import java.util.*;
 import java.util.logging.Level;
 
 public class PassLock extends JavaPlugin{
 
     private EventListener listener;
+    private Map<Player, io.github.stealthykamereon.passlock.command.Command> commandMap;
     public static Economy economy = null;
-    private CodeManager code;
     private LocaleManager localeManager;
-    public FileConfiguration data, locks;
+    private LockManager lockManager;
+    private LockableManager lockableManager;
+    private InventoryManager inventoryManager;
     private String helpMessage;
     private Permission permissionLock = new Permission("passlock.lock");
     private Permission permissionUnlock = new Permission("passlock.unlock");
@@ -37,59 +46,20 @@ public class PassLock extends JavaPlugin{
     private Permission permissionWatch = new Permission("passlock.watch");
 
     public void onEnable(){
+        //Generate config if missing
         getConfig().options().copyDefaults(true);
         saveConfig();
 
         if (!setupEconomy())
             this.getLogger().log(Level.SEVERE, "Can't load economy !");
 
-        File helpMessageFile = new File("plugins/PassLock/helpCommand.txt");
-        if (!helpMessageFile.exists()){
-            try{
-                getLogger().log(Level.INFO, "Help message file not found ! Created a new one.");
-                helpMessageFile.createNewFile();
-                helpMessage = "#6====================#nPassLock Plugin#r#6====================\n" +
-                        "#7PassLock allows you to lock your blocks thanks to a item based code.\n" +
-                        "#7Use right-click and left-click to change the item's number.\n" +
-                        "\n" +
-                        "List of commands :\n" +
-                        "#flock : #7To lock block \n" +
-                        "#funlock : #7To unlock block \n" +
-                        "#fhelp : #7Show this message\n" +
-                        "#freload : #7Apply changes to the config and reload the plugin\n" +
-                        "#fsetLockable : #7Allow to lock a type of block \n" +
-                        "#funsetLockable : #7Disable the \"lockability\" of a type of block\n" +
-                        "#fchangeLockingInventory : #7Change the locking window \n" +
-                        "#fresetConfig : #7Reset the configuration file without restarting server\n" +
-                        "#frecalculate : #7Recalculate the number of locks of every players";
-                FileWriter writer = new FileWriter(helpMessageFile);
-                writer.write(helpMessage);
-                writer.close();
-                helpMessage = ChatColor.translateAlternateColorCodes('#', helpMessage);
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-        }else{
-            try {
-                FileReader reader = new FileReader(helpMessageFile);
-                int a = reader.read();
-                helpMessage = "";
-                while (a!=-1){
-                    helpMessage= helpMessage+(char)a;
-                    a = reader.read();
-                }
-                helpMessage = ChatColor.translateAlternateColorCodes('#', helpMessage);
-                getLogger().log(Level.INFO, "Help message file loaded !");
-            }catch (FileNotFoundException e){
-                e.printStackTrace();
-            }catch (IOException e){
-                e.printStackTrace();
-            }
-        }
+        this.loadResources();
+
         this.loadLocale();
-        data = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "data.yml"));
-        locks = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "locks.yml"));
-        this.code = new CodeManager(this, data, locks);
+        this.lockableManager = new LockableManager(this);
+        this.lockManager = new LockManager(this);
+        this.inventoryManager = new InventoryManager(this);
+        commandMap = new HashMap<>();
 
         listener = new EventListener(this);
         PluginManager pm = getServer().getPluginManager();
@@ -108,19 +78,48 @@ public class PassLock extends JavaPlugin{
 
     }
 
+    private void loadResources() {
+        generateFile("helpCommand.txt");
+        generateDirectory("locales");
+        generateFile("locales/en_EN.yml");
+        generateFile("locales/fr_FR.yml");
+    }
+
+    private void generateDirectory(String name) {
+        File file = new File(getDataFolder().getAbsolutePath()+"/"+name);
+        file.mkdir();
+    }
+
+    private void generateFile(String filename) {
+        File file = new File(this.getDataFolder().getAbsolutePath()+"/"+filename);
+        try {
+            if (file.createNewFile()) {
+                FileOutputStream outputStream = new FileOutputStream(file);
+                InputStream inputStream = this.getResource(filename);
+                int read = -1;
+                while ((read = inputStream.read()) != -1)
+                    outputStream.write(read);
+                outputStream.flush();
+                outputStream.close();
+                inputStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void loadLocale() {
-        !todo
+        String localeFilePath = "/locales/"+getConfig().getString("locale")+".yml";
+        File localeFile = new File(getDataFolder().getAbsolutePath()+localeFilePath);
+        if (!localeFile.exists()) {
+            getLogger().log(Level.SEVERE, String.format("Locale not found : %s", getConfig().getString(localeFilePath)));
+        }
+        FileConfiguration locale = YamlConfiguration.loadConfiguration(localeFile);
+        this.localeManager = new LocaleManager(locale);
     }
 
     public void onDisable(){
         this.saveConfig();
-        try {
-            data.save(new File(getDataFolder(), "data.yml"));
-            locks.save(new File(getDataFolder(), "locks.yml"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 
     public Economy getEconomy(){
@@ -138,34 +137,10 @@ public class PassLock extends JavaPlugin{
     }
 
     private void resetConfig(){
-        File config = new File(getDataFolder().getAbsolutePath()+"\\config.yml");
+        File config = new File(getDataFolder().getAbsolutePath()+"/config.yml");
         config.delete();
         saveDefaultConfig();
         reloadConfig();
-        code.reload();
-    }
-
-    private void resetLockCount(){
-        for (String s : locks.getKeys(false)){
-            locks.set(s, 0);
-        }
-    }
-
-    private void recalculateLockCounts(){
-        resetLockCount();
-        for (String s : data.getKeys(false)){
-            String playerName = code.getOwner(s);
-            Player player = this.getServer().getPlayer(playerName);
-            code.increaseLocksCount(player);
-        }
-    }
-
-    protected CodeManager getCodeManager(){
-        return this.code;
-    }
-
-    protected LocaleManager getLocaleManager(){
-        return this.localeManager;
     }
 
     @Override
@@ -174,136 +149,128 @@ public class PassLock extends JavaPlugin{
             sender.sendMessage("Console commands support is not implemented, if you need it, please tell me on the spigot page.");
             return true;
         }
+        Player p = (Player)sender;
+        boolean hasPermission = true;
+        boolean commandSuccessful = true;
 
-        if (cmd.getName().equalsIgnoreCase("passlock") && args.length!=0){
-            if(args[0].equalsIgnoreCase("lock")) {
-                if (sender.hasPermission("passlock.lock")){
-                    Player p = (Player)sender;
-                    if (getConfig().getBoolean("useEconomy"))
-                        p.sendMessage(code.PREFIX+code.PRICEMESSAGE.replace("%p", code.getLockPrice(p)+""));
-                    p.sendMessage(code.PREFIX+code.LOCKCOMMAND);
-                    if (listener.delcommandPlayers.contains(p))
-                        listener.delcommandPlayers.remove(p);
-                    else if (listener.unsetlockablePlayers.contains(p))
-                        listener.unsetlockablePlayers.remove(p);
-                    else if (listener.setlockablePlayers.contains(p))
-                        listener.setlockablePlayers.remove(p);
-                    if (!listener.addcommandPlayers.contains(p))
-                        listener.addcommandPlayers.add(p);
-                    return true;
-                }else{
-                    sender.sendMessage(code.PREFIX+code.NOPERMISSIONS);
-                    return true;
-                }
-
-            }else if(args[0].equalsIgnoreCase("unlock")) {
-                if(sender.hasPermission("passlock.unlock")){
-                    Player p = (Player) sender;
-                    p.sendMessage(code.PREFIX+code.UNLOCKCOMMAND);
-                    if (listener.addcommandPlayers.contains(p))
-                        listener.addcommandPlayers.remove(p);
-                    else if (listener.unsetlockablePlayers.contains(p))
-                        listener.unsetlockablePlayers.remove(p);
-                    else if (listener.setlockablePlayers.contains(p))
-                        listener.setlockablePlayers.remove(p);
-                    if (!listener.delcommandPlayers.contains(p))
-                        listener.delcommandPlayers.add(p);
-                    return true;
-                }else{
-                    sender.sendMessage(code.PREFIX+code.NOPERMISSIONS);
-                    return true;
-                }
-
-            }else if (args[0].equalsIgnoreCase("help")){
-                Player p = (Player) sender;
-                p.sendMessage(helpMessage);
-                return true;
-            }else if (args[0].equalsIgnoreCase("reload")){
-                Player p = (Player)sender;
-                if (p.hasPermission("passlock.reload")){
-                    reloadConfig();
-                    locks = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "locks.yml"));
-                    code.reload();
-                    sender.sendMessage(code.PREFIX+code.RELOAD);
-                    return true;
-                }else{
-                    p.sendMessage(code.PREFIX+code.NOPERMISSIONS);
-                    return true;
-                }
-            }else if (args[0].equalsIgnoreCase("setLockable")) {
-                Player p = (Player) sender;
-                if (p.hasPermission("passlock.setLockable")) {
-                    if (listener.addcommandPlayers.contains(p))
-                        listener.addcommandPlayers.remove(p);
-                    else if (listener.delcommandPlayers.contains(p))
-                        listener.delcommandPlayers.remove(p);
-                    else if (listener.unsetlockablePlayers.contains(p))
-                        listener.unsetlockablePlayers.remove(p);
-                    if (!listener.setlockablePlayers.contains(p))
-                        listener.setlockablePlayers.add(p);
-                    p.sendMessage(code.PREFIX + code.SETLOCKABLE);
-                    return true;
-                } else {
-                    sender.sendMessage(code.PREFIX + code.NOPERMISSIONS);
-                    return true;
-                }
-            }else if(args[0].equalsIgnoreCase("unsetLockable")) {
-                Player p = (Player) sender;
-                if (p.hasPermission("passlock.unsetLockable")) {
-                    if (listener.addcommandPlayers.contains(p))
-                        listener.addcommandPlayers.remove(p);
-                    else if (listener.delcommandPlayers.contains(p))
-                        listener.delcommandPlayers.remove(p);
-                    else if (listener.setlockablePlayers.contains(p))
-                        listener.setlockablePlayers.remove(p);
-                    if (!listener.unsetlockablePlayers.contains(p))
-                        listener.unsetlockablePlayers.add(p);
-                    p.sendMessage(code.PREFIX + code.UNSETLOCKABLE);
-                    return true;
-                } else {
-                    sender.sendMessage(code.PREFIX + code.NOPERMISSIONS);
-                    return true;
-                }
-            }else if(args[0].equalsIgnoreCase("changeLockingInventory")) {
-                Player p = (Player) sender;
-                if (p.hasPermission("passlock.changeLockingInventory")) {
-                    p.openInventory(code.getChangeInventory(p));
-                    return true;
-                }else {
-                    p.sendMessage(code.PREFIX+code.NOPERMISSIONS);
-                    return false;
-                }
-
-            }else if (args[0].equalsIgnoreCase("resetConfig")){
-                Player p = (Player) sender;
-                if (p.hasPermission("passlock.resetConfig")){
-                    resetConfig();
-                    p.sendMessage(code.PREFIX+code.RESETCONFIG);
-                    return true;
-                }else {
-                    p.sendMessage(code.PREFIX+code.NOPERMISSIONS);
-                    return false;
-                }
-            }else if(args[0].equalsIgnoreCase("recalculate")){
-                Player p = (Player)sender;
-                if (p.hasPermission("passlock.recalculate")){
-                    recalculateLockCounts();
-                    p.sendMessage(code.PREFIX+code.CALCULATION);
-                }else
-                    p.sendMessage(code.PREFIX+code.NOPERMISSIONS);
-                return true;
-            }else if (args[0].equalsIgnoreCase("owner")){
-                Player p = (Player)sender;
-                if(!listener.ownerPlayer.contains(p))
-                    listener.ownerPlayer.add(p);
-                p.sendMessage(code.PREFIX+code.OWNERASKING);
-                return true;
-            }
-            else
-                return false;
-        }else
+        if (!cmd.getName().equalsIgnoreCase("passlock") || args.length==0)
             return false;
 
+        String command = args[0].toLowerCase();
+        switch (command) {
+            case "lock":
+                if (sender.hasPermission("passlock.lock")){
+                    if (getConfig().getBoolean("useEconomy"))
+                        p.sendMessage(formatMessage(localeManager.getString("priceMessage").replace("%p", lockManager.getLockPrice(p)+"")));
+                    p.sendMessage(formatMessage(localeManager.getString("lockCommand")));
+                    commandMap.put(p, new CommandLock(this));
+                }else
+                    hasPermission = false;
+                break;
+            case "unlock":
+                if(sender.hasPermission("passlock.unlock")){
+                    commandMap.put(p, new CommandUnlock(this));
+                    p.sendMessage(formatMessage(localeManager.getString("unlockCommand")));
+                }else
+                    hasPermission = false;
+                break;
+            case "reload":
+                if (p.hasPermission("passlock.reload")){
+                    reloadConfig();
+                    p.sendMessage(formatMessage(localeManager.getString("reload")));
+                }else
+                    hasPermission = false;
+                break;
+            case "setlockable":
+                if (p.hasPermission("passlock.setLockable")) {
+                    commandMap.put(p, new CommandSetLockable(this));
+                    p.sendMessage(formatMessage(localeManager.getString("setLockable")));
+                } else
+                    hasPermission = false;
+                break;
+            case "unsetlockable":
+                if (p.hasPermission("passlock.unsetLockable")) {
+                    commandMap.put(p, new CommandUnsetLockable(this));
+                    p.sendMessage(formatMessage(localeManager.getString("removeLockable")));
+                } else
+                    hasPermission = false;
+                break;
+            case "changelockinginventory":
+                if (p.hasPermission("passlock.changeLockingInventory")) {
+                    p.openInventory(inventoryManager.getChangingInventory(p));
+                }else
+                    hasPermission = false;
+                break;
+            case "resetconfig":
+                if (p.hasPermission("passlock.resetConfig")){
+                    resetConfig();
+                    p.sendMessage(formatMessage(localeManager.getString("resetConfig")));
+                }else
+                    hasPermission = false;
+                break;
+            case "owner":
+                commandMap.put(p, new CommandOwner(this));
+                p.sendMessage(formatMessage(localeManager.getString("ownerAsking")));
+                break;
+            case "help":
+                p.sendMessage(helpMessage);
+                break;
+            default:
+                commandSuccessful = false;
+        }
+        if (!hasPermission)
+            p.sendMessage(formatMessage(localeManager.getString("noPermissions")));
+        return commandSuccessful;
     }
 
+    public String formatMessage(String message){
+        return localeManager.getString("prefix")+message;
+    }
+
+    public List<String> getMaterialNames(List<Material> materials){
+        List<String> materialNames = new LinkedList<>();
+        for (Material mat : materials)
+            materialNames.add(mat.name());
+        return materialNames;
+    }
+
+    public Location getDoorLocation(Block block){
+        if (lockableManager.isDoor(block.getRelative(BlockFace.UP).getType()))
+            return block.getLocation();
+        else
+            return block.getRelative(BlockFace.DOWN).getLocation();
+    }
+
+    public Location getDoubleChestLocation(Block block){
+        DoubleChest doubleChest = (DoubleChest)block.getState();
+        return doubleChest.getLocation();
+    }
+
+    public Location getLockingLocation(Block block) {
+        if (getLockableManager().isDoor(block.getType()))
+            return getDoorLocation(block);
+        if (getLockableManager().isDoubleChest(block))
+            return getDoubleChestLocation(block);
+        return block.getLocation();
+    }
+
+    public LockManager getLockManager() {
+        return this.lockManager;
+    }
+
+    public LockableManager getLockableManager() {
+        return lockableManager;
+    }
+
+    public LocaleManager getLocaleManager(){
+        return this.localeManager;
+    }
+
+    public InventoryManager getInventoryManager() {
+        return inventoryManager;
+    }
+
+    public Map<Player, io.github.stealthykamereon.passlock.command.Command> getCommandMap() {
+        return commandMap;
+    }
 }
