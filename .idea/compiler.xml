@@ -6,8 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Passlock" />
         <module name="passlock" />
+        <module name="Passlock" />
       </profile>
     </annotationProcessing>
   </component>

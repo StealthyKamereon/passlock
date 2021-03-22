@@ -23,7 +23,7 @@
 # "#o" = ITALIC
 # "#r" = RESET
 
-prefix: "#7[PassLock]"
+prefix: "#7[PassLock] "
 lockingInventoryTitle: "Enter your code :"
 priceTitle: " (cost : %c)"
 basicInventoryTitle: "Code :"
@@ -47,7 +47,7 @@ setLockable: "Click on the block you want to be able to lock"
 removeLockable: "Click on the block you don't want to be able to lock"
 nowLockable: "This block is now lockable"
 noLongerLockable: "This block is no longer lockable"
-lockingLimitReached: "You already own the maximum number of locks."
+lockingLimitReached: "You already own the maximum number of locks. (%c/%l)"
 robbingAlert: "#c%player is trying to open your %block at %location !"
 resetConfig: "#aConfiguration successfully reset !"
 notEnoughMoney: "#cYou don't have enough money !"

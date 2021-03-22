@@ -1,4 +1,4 @@
-package io.github.stealthykamereon.passlock.command;
+package io.github.stealthykamereon.passlock.command.eventcommand;
 
 import io.github.stealthykamereon.passlock.PassLock;
 import org.bukkit.block.Block;
@@ -7,8 +7,9 @@ import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public class CommandUnsetLockable extends Command {
-    public CommandUnsetLockable(PassLock passLock) {
+public class UnsetLockableEventCommand extends EventCommand {
+
+    public UnsetLockableEventCommand(PassLock passLock) {
         super(passLock);
     }
 
@@ -20,7 +21,7 @@ public class CommandUnsetLockable extends Command {
                 Player player = interactEvent.getPlayer();
                 Block block = interactEvent.getClickedBlock();
                 passLock.getLockableManager().removeLockable(block.getType());
-                player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("nowLockable")));
+                player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("noLongerLockable")));
                 interactEvent.setCancelled(true);
             }
         }

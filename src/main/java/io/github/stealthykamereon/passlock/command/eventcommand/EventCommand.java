@@ -1,13 +1,14 @@
-package io.github.stealthykamereon.passlock.command;
+package io.github.stealthykamereon.passlock.command.eventcommand;
 
 import io.github.stealthykamereon.passlock.PassLock;
 import org.bukkit.event.Event;
 
-public abstract class Command {
+public abstract class EventCommand {
+
 
     protected PassLock passLock;
 
-    public Command(PassLock passLock){
+    public EventCommand(PassLock passLock) {
         this.passLock = passLock;
     }
 

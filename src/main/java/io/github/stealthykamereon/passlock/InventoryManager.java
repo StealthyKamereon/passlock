@@ -36,12 +36,12 @@ public class InventoryManager {
     }
 
     public Inventory createBasicInventory(Player owner, Block block){
-        Location location = passLock.getLockingLocation(block);
+        Location location = block.getLocation();
         return createInventory(owner, location, passLock.getLocaleManager().getString("basicInventoryTitle"));
     }
 
     public Inventory createLockingInventory(Player owner, Block block){
-        Location location = passLock.getLockingLocation(block);
+        Location location = block.getLocation();
         String title = passLock.getLocaleManager().getString("lockingInventoryTitle");
         if(passLock.getConfig().getBoolean("useEconomy")){
             title+= passLock.getLocaleManager().getString("priceTitle").replace("%c", passLock.getLockManager().getLockPrice(owner)+"");
@@ -93,8 +93,8 @@ public class InventoryManager {
     }
 
     public Inventory getWatchingInventory(Block block, Player p){
-        Location location = passLock.getLockingLocation(block);
-        String title = passLock.getLocaleManager().getString("watchTitle").replace("%p", passLock.getLockManager().getLockOwner(block).getDisplayName());
+        Location location = block.getLocation();
+        String title = passLock.getLocaleManager().getString("watchTitle").replace("%p", passLock.getLockManager().getLockOwner(block).getName());
         Inventory inv = Bukkit.createInventory(p, 54, title);
         Chest chest = (Chest)location.getBlock().getState();
         inv.setContents(chest.getInventory().getContents());
@@ -102,7 +102,7 @@ public class InventoryManager {
     }
 
     public Inventory getChangingInventory(Player owner){
-        Inventory inventory = Bukkit.createInventory(owner, InventoryType.HOPPER, passLock.getLocaleManager().getString("changeTitle"));
+        Inventory inventory = Bukkit.createInventory(owner, InventoryType.HOPPER, passLock.getLocaleManager().getString("changingInventoryTitle"));
 
         ItemStack nullItem = new ItemStack(Material.BARRIER,1);
         ItemMeta nullMeta = nullItem.getItemMeta();
@@ -126,6 +126,11 @@ public class InventoryManager {
             passLock.saveConfig();
         }else
             owner.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("changingFailed")));
+    }
+
+    public boolean isChangingInventory(Inventory inventory, InventoryView inventoryView) {
+        return inventoryView.getTitle().equals(passLock.getLocaleManager().getString("changingInventoryTitle"))
+                && inventory.getType() == InventoryType.HOPPER;
     }
 
     public int[] getPassword(InventoryView inventoryView) {

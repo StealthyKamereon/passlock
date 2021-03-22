@@ -2,8 +2,14 @@ package io.github.stealthykamereon.passlock;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.Container;
 import org.bukkit.block.DoubleChest;
-import org.bukkit.material.Openable;
+import org.bukkit.block.data.Openable;
+import org.bukkit.block.data.type.Chest;
+import org.bukkit.block.data.type.Door;
+import org.bukkit.block.data.type.TrapDoor;
+import org.bukkit.inventory.BlockInventoryHolder;
+import org.bukkit.inventory.Inventory;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -14,28 +20,11 @@ public class LockableManager {
 
     private PassLock passLock;
     private List<Material> lockableMaterials;
-    private List<Material> doors, trapdoors;
 
     public LockableManager(PassLock passLock){
         this.passLock = passLock;
         loadLockableMaterials();
 
-        doors = new LinkedList<>();
-        doors.add(Material.DARK_OAK_DOOR);
-        doors.add(Material.ACACIA_DOOR);
-        doors.add(Material.BIRCH_DOOR);
-        doors.add(Material.IRON_DOOR);
-        doors.add(Material.JUNGLE_DOOR);
-        doors.add(Material.OAK_DOOR);
-        doors.add(Material.SPRUCE_DOOR);
-        trapdoors = new LinkedList<>();
-        trapdoors.add(Material.OAK_TRAPDOOR);
-        trapdoors.add(Material.ACACIA_TRAPDOOR);
-        trapdoors.add(Material.BIRCH_TRAPDOOR);
-        trapdoors.add(Material.DARK_OAK_TRAPDOOR);
-        trapdoors.add(Material.IRON_TRAPDOOR);
-        trapdoors.add(Material.JUNGLE_TRAPDOOR);
-        trapdoors.add(Material.SPRUCE_TRAPDOOR);
     }
 
     private void loadLockableMaterials() {
@@ -69,22 +58,27 @@ public class LockableManager {
 
     public boolean isDoubleChest(Block block){
         try {
-            DoubleChest chest = (DoubleChest) block.getState();
-            return true;
-        } catch (ClassCastException ignored){}
-        return false;
+            Chest chest = (Chest) block.getState().getBlockData();
+            return chest.getType() != Chest.Type.SINGLE;
+        } catch (ClassCastException exception) {
+            return false;
+        }
+    }
+
+    public boolean hasInventory(Block block) {
+        return block.getState() instanceof Container;
+    }
+
+    public Inventory getInventory(Block block) {
+        return ((Container)block.getState()).getInventory();
     }
 
     public boolean isDoor(Material material){
-        return doors.contains(material);
-    }
-
-    public boolean isTrapdoor(Material material){
-        return trapdoors.contains(material);
+        return material.createBlockData() instanceof Door;
     }
 
     public boolean isOpenable(Material material) {
-        return isDoor(material) || isTrapdoor(material);
+        return material.createBlockData() instanceof Openable;
     }
 
 }

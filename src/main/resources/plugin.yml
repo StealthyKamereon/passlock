@@ -1,10 +1,72 @@
 name: PassLock
 author: Kamereon
-version : 1.16.2
+version : 2.0.0
 main: io.github.stealthykamereon.passlock.PassLock
+api-version: 1.16
 depend: [Vault]
 
 commands:
-  passlock:
-    description: Basic command for passlock
-    usage: /passlock [lock|unlock|help|...]
+  lock:
+    description: Lock a block
+    usage: "Usage: /<command> \nThen click on a lockable block."
+    permission: passlock.lock
+  unlock:
+    description: Unlock a block
+    usage: "Usage: /<command> \nThen click on a locked block."
+    permission: passlock.unlock
+  setLockable:
+    description: Make a block-type lockable
+    usage: "Usage: /<command> \nThen click on a block."
+    permission: passlock.setLockable
+  unsetLockable:
+    description: Make a block-type no longer lockable
+    usage: "Usage: /<command> \nThen click on a block."
+    permission: passlock.unsetLockable
+  changeLockingInventory:
+    description: Change the locking inventory style
+    usage: "Usage: /<command>"
+    permission: passlock.changeLockingInventory
+  owner:
+    description: Print the owner of the locked block
+    usage: "Usage: /<command> \nThen click on a block."
+    permission: passlock.owner
+  reload:
+    description: Reload the plugin (/!\ Possible config loss)
+    usage: "Usage: /<command>"
+    permission: passlock.reload
+  reset:
+    description: Reset the config file (/!\ Possible config loss)
+    usage: "Usage: /<command>"
+    permission: passlock.resetConfig
+
+permissions:
+  passlock.open:
+    description: Allows you to open locked blocks
+    default: true
+  passlock.lock:
+    description: Allows you to use the command /lock
+    default: true
+  passlock.unlock:
+    description: Allows you to use the command /unlock
+    default: true
+  passlock.setLockable:
+    description: Allows you to use the command /setLockable
+    default: op
+  passlock.unsetLockable:
+    description: Allows you to use the command /unsetLockable
+    default: op
+  passlock.changeLockingInventory:
+    description: Allows you to use the command /changeLockingInventory
+    default: op
+  passlock.unlockEveryLocks:
+    description: Allows you to unlock locks belonging to other players
+    default: op
+  passlock.resetConfig:
+    description: Allows you to use the command /reset
+    default: op
+  passlock.reload:
+    description: Allows you to use the command /reload
+    default: op
+  passlock.watch:
+    description: Allows you to use the command /watch
+    default: op
