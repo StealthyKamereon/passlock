@@ -57,7 +57,7 @@ public class EventListener implements Listener {
             } else {
                 if (passLock.getLockManager().isLocked(block)) {
                     // The player want to watch and is not the owner
-                    if (player.hasPermission("passlock.watch") && !passLock.getLockManager().isOwner(player, block)) {
+                    if (passLock.getLockableManager().hasInventory(block) && player.hasPermission("passlock.watch") && !passLock.getLockManager().isOwner(player, block)) {
                         try {
                             player.openInventory(passLock.getInventoryManager().getWatchingInventory(block, player));
                             watchingPlayer.add(player);
@@ -368,7 +368,6 @@ public class EventListener implements Listener {
         }
         if (passLock.getInventoryManager().isChangingInventory(inventory, e.getView())){
             passLock.getInventoryManager().setChangeInventory(inventory, p);
-            passLock.sendMessage(p, "changedLockingInventory");
         }
     }
 

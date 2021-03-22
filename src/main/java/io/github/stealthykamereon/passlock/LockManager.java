@@ -80,9 +80,9 @@ public class LockManager {
         return isOwner(player, location);
     }
 
-    public boolean isOwner(Player player, Location location) {
+    public boolean isOwner(OfflinePlayer player, Location location) {
         if (this.locks.containsKey(location)) {
-            return this.locks.get(location).getOwner().equals(player);
+            return this.locks.get(location).getOwner().getUniqueId().equals(player.getUniqueId());
         } else
             return false;
     }
