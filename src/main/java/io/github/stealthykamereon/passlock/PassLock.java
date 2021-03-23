@@ -66,7 +66,6 @@ public class PassLock extends JavaPlugin {
     }
 
     private void loadResources() {
-        generateFile("helpCommand.txt");
         generateDirectory("locales");
         generateFile("locales/en_EN.yml");
         generateFile("locales/fr_FR.yml");
@@ -83,6 +82,10 @@ public class PassLock extends JavaPlugin {
             if (file.createNewFile()) {
                 FileOutputStream outputStream = new FileOutputStream(file);
                 InputStream inputStream = this.getResource(filename);
+                if (inputStream == null) {
+                    getLogger().severe(String.format("Can't generate file %s !", filename));
+                    return;
+                }
                 int read = -1;
                 while ((read = inputStream.read()) != -1)
                     outputStream.write(read);
