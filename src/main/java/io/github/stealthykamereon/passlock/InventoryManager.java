@@ -94,7 +94,7 @@ public class InventoryManager {
 
     public Inventory getWatchingInventory(Block block, Player p){
         Location location = passLock.getWorldInteractor().getLockingLocation(block);
-        String title = passLock.getLocaleManager().getString("watchTitle").replace("%p", passLock.getLockManager().getLockOwner(block).getDisplayName());
+        String title = passLock.getLocaleManager().getString("watchTitle").replace("%p", passLock.getLockManager().getLockOwner(block).getName());
         Inventory inv = Bukkit.createInventory(p, 54, title);
         Chest chest = (Chest)location.getBlock().getState();
         inv.setContents(chest.getInventory().getContents());
@@ -126,6 +126,11 @@ public class InventoryManager {
             passLock.saveConfig();
         }else
             owner.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("changingFailed")));
+    }
+
+    public boolean isChangingInventory(Inventory inventory, InventoryView inventoryView) {
+        return inventoryView.getTitle().equals(passLock.getLocaleManager().getString("changingInventoryTitle"))
+                && inventory.getType() == InventoryType.HOPPER;
     }
 
     public int[] getPassword(InventoryView inventoryView) {
@@ -179,14 +184,13 @@ public class InventoryManager {
     }
 
     private void alertOwner(Block block, Player robber) {
-        Player owner = passLock.getLockManager().getLockOwner(block);
-        if (!owner.equals(robber)) {
+        Player owner = passLock.getLockManager().getLockOwner(block).getPlayer();
+        if (owner != null && !owner.equals(robber)) {
             Location location = block.getLocation();
-            String message = passLock.getLocaleManager().getString("robbingAlert")
-                    .replace("%player", robber.getDisplayName())
-                    .replace("%block", block.getType().name())
-                    .replace("%location", String.format("(%d, %d, %d)", location.getBlockX(), location.getBlockY(), location.getBlockZ()));
-            owner.sendMessage(passLock.formatMessage(message));
+            passLock.sendMessage(owner, "robbingAlert",
+                    "%player", robber.getDisplayName(),
+                    "%block", block.getType().name(),
+                    "%location", String.format("(%d, %d, %d)", location.getBlockX(), location.getBlockY(), location.getBlockZ()));
         }
     }
 

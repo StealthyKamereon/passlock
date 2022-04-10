@@ -1,12 +1,15 @@
 package io.github.stealthykamereon.passlock;
 
 
-import io.github.stealthykamereon.passlock.command.Command;
+import io.github.stealthykamereon.passlock.command.eventcommand.EventCommand;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.DyeColor;
+import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Openable;
+import org.bukkit.block.data.type.Chest;
+import org.bukkit.block.data.type.Door;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,10 +18,7 @@ import org.bukkit.event.entity.EntityBreakDoorEvent;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 import org.bukkit.inventory.Inventory;
@@ -28,18 +28,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class EventListener implements Listener{
+public class EventListener implements Listener {
 
     private PassLock passLock;
     private Logger log;
     public List<Player> watchingPlayer;
-    private DyeColor[] colors = {DyeColor.WHITE, DyeColor.LIGHT_GRAY, DyeColor.GRAY, DyeColor.BLACK, DyeColor.RED,
-            DyeColor.ORANGE, DyeColor.YELLOW, DyeColor.LIME, DyeColor.GREEN, DyeColor.LIGHT_BLUE, DyeColor.CYAN,
-            DyeColor.BLUE, DyeColor.PURPLE, DyeColor.MAGENTA, DyeColor.PINK, DyeColor.BROWN};
     private Economy economy;
     private InventoryManager inventoryManager;
 
-    public EventListener(PassLock passLock){
+    public EventListener(PassLock passLock) {
         this.passLock = passLock;
         log = passLock.getLogger();
         watchingPlayer = new ArrayList<Player>();
@@ -48,35 +45,38 @@ public class EventListener implements Listener{
     }
 
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent e){
-        if (e.getAction() == Action.RIGHT_CLICK_BLOCK){
+    public void onPlayerInteract(PlayerInteractEvent e) {
+        if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block block = e.getClickedBlock();
+            if (block == null) {
+                return;
+            }
             Player player = e.getPlayer();
+            // The player emitted a command
             if (passLock.getCommandMap().containsKey(player)) {
-                Command command = passLock.getCommandMap().get(player);
+                EventCommand command = passLock.getCommandMap().get(player);
                 command.trigger(e);
                 passLock.getCommandMap().remove(player);
                 e.setCancelled(true);
             } else {
                 if (passLock.getLockManager().isLocked(block)) {
-                    if (player.hasPermission("passlock.watch") && !passLock.getLockManager().isOwner(player, block)) {
+                    // The player want to watch and is not the owner
+                    if (passLock.getWorldInteractor().hasInventory(block) && player.hasPermission("passlock.watch") && !passLock.getLockManager().isOwner(player, block)) {
                         try {
                             player.openInventory(passLock.getInventoryManager().getWatchingInventory(block, player));
                             watchingPlayer.add(player);
                             e.setCancelled(true);
                         } catch (ClassCastException ignored) {}
+                    // The player want to open and is the owner
                     } else if (passLock.getLockManager().isOwner(player, block) && !passLock.getConfig().getBoolean("ownerNeedCode")) {
                         e.setCancelled(false);
-                    } else if (passLock.getWorldInteractor().canBeClosed(block)) {
-                        Openable openable = (Openable) block.getBlockData();
-                        if (openable.isOpen()) { //Close opened doors without code
-                            openable.setOpen(false);
-                            block.setBlockData(openable);
-                        }
-                        e.setCancelled(true);
                     } else if (player.hasPermission("passlock.open")) {
-                        player.openInventory(passLock.getInventoryManager().createBasicInventory(player, block));
-                        e.setCancelled(true);
+                        if (passLock.getWorldInteractor().canBeClosed(block)) {
+                            return;
+                        } else {
+                            player.openInventory(passLock.getInventoryManager().createBasicInventory(player, block));
+                            e.setCancelled(true);
+                        }
                     } else {
                         player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("noPermissions")));
                         e.setCancelled(true);
@@ -87,7 +87,7 @@ public class EventListener implements Listener{
     }
 
     @EventHandler
-    public void onHopperTakeItem(InventoryMoveItemEvent event){
+    public void onHopperTakeItem(InventoryMoveItemEvent event) {
         try {
             InventoryHolder holder = event.getSource().getHolder();
             if (holder instanceof BlockState) {
@@ -96,7 +96,7 @@ public class EventListener implements Listener{
                     event.setCancelled(true);
                 }
             }
-        }catch (NullPointerException e){
+        } catch (NullPointerException e) {
             e.printStackTrace();
         }
     }
@@ -169,17 +169,17 @@ public class EventListener implements Listener{
     }
 
     @EventHandler
-    public void onBlockBreak(BlockBreakEvent e){
+    public void onBlockBreak(BlockBreakEvent e) {
         Block block = e.getBlock();
         Player player = e.getPlayer();
 
         if (passLock.getLockManager().isLocked(block)) {
             if (passLock.getLockManager().isOwner(player, block) && !passLock.getConfig().getBoolean("ownerNeedCode")) {
                 passLock.getLockManager().unlock(block);
-                player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("blockUnlocked")));
+                passLock.sendMessage(player, "blockUnlocked");
                 e.setCancelled(false);
             } else {
-                player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("breakMessage")));
+                passLock.sendMessage(player, "breakMessage");
                 e.setCancelled(true);
             }
         } else if (passLock.getLockManager().hasNearbyLockedBlockRelyingOn(block)) {
@@ -190,14 +190,18 @@ public class EventListener implements Listener{
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event){
+    public void onInventoryClick(InventoryClickEvent event) {
         try {
-            Player p = (Player)event.getWhoClicked();
-            if (watchingPlayer.contains(p)){
+            Player p = (Player) event.getWhoClicked();
+            if (watchingPlayer.contains(p)) {
                 event.setCancelled(true);
                 return;
             }
             if (inventoryManager.isAPasslockInventory(event.getView())) {
+                if (event.getClick() == ClickType.DOUBLE_CLICK) {
+                    event.setCancelled(true);
+                    return;
+                }
                 if (event.getCursor() != null && event.getCurrentItem() != null) {
                     inventoryManager.handleInventoryEvent(event);
                 }
@@ -226,7 +230,7 @@ public class EventListener implements Listener{
     }
 
     @EventHandler
-    public void onWorldSave(WorldSaveEvent e){
+    public void onWorldSave(WorldSaveEvent e) {
         passLock.getLockManager().saveLocks();
     }
 

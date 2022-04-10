@@ -1,4 +1,4 @@
-package io.github.stealthykamereon.passlock.command;
+package io.github.stealthykamereon.passlock.command.eventcommand;
 
 import io.github.stealthykamereon.passlock.PassLock;
 import org.bukkit.block.Block;
@@ -9,8 +9,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 
 import static io.github.stealthykamereon.passlock.PassLock.economy;
 
-public class CommandUnlock extends Command {
-    public CommandUnlock(PassLock passLock) {
+public class UnlockEventCommand extends EventCommand {
+
+    public UnlockEventCommand(PassLock passLock) {
         super(passLock);
     }
 

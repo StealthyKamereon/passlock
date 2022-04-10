@@ -1,28 +1,35 @@
 package io.github.stealthykamereon.passlock;
 
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Lock implements ConfigurationSerializable {
 
-    private Player owner;
-    private int[] password;
-    private Location location;
+    private final OfflinePlayer owner;
+    private final int[] password;
+    private final Location location;
 
-    public Lock(Player owner, int[] password, Location location){
+    public Lock(Player owner, int[] password, Location location) {
         this.owner = owner;
         this.password = password;
         this.location = location;
     }
 
-    public Lock(Map<String, Object> serializedObject){
-        this.owner = (Player)serializedObject.get("owner");
-        this.password = (int[])serializedObject.get("password");
-        this.location = (Location)serializedObject.get("location");
+    public Lock(Map<String, Object> serializedObject) {
+        this.owner = (OfflinePlayer) serializedObject.get("owner");
+        this.password = new int[]{0, 0, 0};
+        int i = 0;
+        for (Integer digit : (ArrayList<Integer>)serializedObject.get("password")) {
+            this.password[i] = digit;
+            i++;
+        }
+        this.location = (Location) serializedObject.get("location");
     }
 
     @Override
@@ -34,7 +41,7 @@ public class Lock implements ConfigurationSerializable {
         return serialized;
     }
 
-    public Player getOwner() {
+    public OfflinePlayer getOwner() {
         return owner;
     }
 
@@ -45,4 +52,5 @@ public class Lock implements ConfigurationSerializable {
     public Location getLocation() {
         return location;
     }
+
 }

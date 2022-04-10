@@ -3,6 +3,7 @@ package io.github.stealthykamereon.passlock;
 import com.udojava.evalex.Expression;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Chest;
@@ -13,18 +14,16 @@ import org.bukkit.material.Attachable;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class LockManager {
 
-    private PassLock passLock;
+    private final PassLock passLock;
     private Map<Location, Lock> locks;
 
-    public LockManager(PassLock passLock){
+    public LockManager(PassLock passLock) {
         this.passLock = passLock;
         loadLocks();
     }
@@ -32,24 +31,34 @@ public class LockManager {
     private void loadLocks() {
         this.locks = new HashMap<>();
         FileConfiguration lockFile = YamlConfiguration.loadConfiguration(new File(passLock.getDataFolder(), "locks.yml"));
-        List<?> objList = lockFile.getList("locks");
-        if (objList != null) {
-            for (Object object : objList) {
-                Lock lock = (Lock) object;
-                this.locks.put(lock.getLocation(), lock);
+        locks = new HashMap<>();
+        if (lockFile.contains("locks")) {
+            for (Object obj : lockFile.getList("locks")) {
+                Lock lock = (Lock)obj;
+                locks.put(lock.getLocation(), lock);
             }
         }
+        passLock.getLogger().info(String.format("Loaded %s locks", locks.keySet().size()));
     }
 
     public void saveLocks() {
         FileConfiguration lockFile = YamlConfiguration.loadConfiguration(new File(passLock.getDataFolder(), "locks.yml"));
-        lockFile.set("locks", this.locks);
+        List<Lock> savedLocks = new ArrayList<>();
+        for (Lock lock : locks.values()){
+            savedLocks.add(lock);
+        }
+        lockFile.set("locks", savedLocks);
+        try {
+            lockFile.save(new File(passLock.getDataFolder(), "locks.yml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public int getLockCount(Player p){
+    public int getLockCount(Player p) {
         int count = 0;
-        for (Lock lock : this.locks.values()){
-            if (lock.getOwner().equals(p)){
+        for (Lock lock : this.locks.values()) {
+            if (lock.getOwner().equals(p)) {
                 count++;
             }
         }
@@ -84,45 +93,45 @@ public class LockManager {
     public boolean isOwner(Player player, Block block){
         Location location = passLock.getWorldInteractor().getLockingLocation(block);
         if (this.locks.containsKey(location)) {
-            return this.locks.get(location).getOwner().equals(player);
+            return this.locks.get(location).getOwner().getUniqueId().equals(player.getUniqueId());
         } else
             return false;
     }
 
-    public Player getLockOwner(Block block){
+    public OfflinePlayer getLockOwner(Block block) {
         Location location = passLock.getWorldInteractor().getLockingLocation(block);
         return this.locks.get(location).getOwner();
     }
 
-    public boolean isPasswordCorrect(Block block, int[] password){
+    public boolean isPasswordCorrect(Block block, int[] password) {
         Location location = passLock.getWorldInteractor().getLockingLocation(block);
-        if (this.locks.containsKey(location)){
+        if (this.locks.containsKey(location)) {
             return Arrays.equals(this.locks.get(location).getPassword(), password);
         } else {
             return false;
         }
     }
 
-    public int getLockingLimit(Player p){
-        if (passLock.getConfig().getBoolean("lockingLimitEnabled")){
-            for (PermissionAttachmentInfo perm : p.getEffectivePermissions()){
-                if (perm.getPermission().startsWith("passlock.locklimit.")){
-                    return Integer.parseInt(perm.getPermission().substring(perm.getPermission().lastIndexOf(".")+1));
+    public int getLockingLimit(Player p) {
+        if (passLock.getConfig().getBoolean("lockingLimitEnabled")) {
+            for (PermissionAttachmentInfo perm : p.getEffectivePermissions()) {
+                if (perm.getPermission().startsWith("passlock.locklimit.")) {
+                    return Integer.parseInt(perm.getPermission().substring(perm.getPermission().lastIndexOf(".") + 1));
                 }
             }
         }
         return -1;
     }
 
-    public float getLockPrice(Player p){
-        int lockCount = getLockCount(p)+1;
+    public float getLockPrice(Player p) {
+        int lockCount = getLockCount(p) + 1;
         String priceExpression = "0";
-        for (PermissionAttachmentInfo perm : p.getEffectivePermissions()){
-            if (perm.getPermission().startsWith("passlock.lockprice.")){
-                priceExpression = perm.getPermission().substring(perm.getPermission().lastIndexOf(".")+1);
+        for (PermissionAttachmentInfo perm : p.getEffectivePermissions()) {
+            if (perm.getPermission().startsWith("passlock.lockprice.")) {
+                priceExpression = perm.getPermission().substring(perm.getPermission().lastIndexOf(".") + 1);
             }
         }
-        priceExpression = priceExpression.replace("n", lockCount+"");
+        priceExpression = priceExpression.replace("n", lockCount + "");
         Expression exp = new Expression(priceExpression);
         BigDecimal result = exp.eval();
         return result.floatValue();
@@ -130,6 +139,10 @@ public class LockManager {
 
     public boolean isLocked(Block block){
         Location location = passLock.getWorldInteractor().getLockingLocation(block);
+        return isLocked(location);
+    }
+
+    public boolean isLocked(Location location) {
         return locks.containsKey(location);
     }
 
@@ -169,7 +182,7 @@ public class LockManager {
     }
 
 
-    public boolean hasRemainingLocks(Player player){
+    public boolean hasRemainingLocks(Player player) {
         return getLockCount(player) < getLockingLimit(player);
     }
 }

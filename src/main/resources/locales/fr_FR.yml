@@ -23,7 +23,7 @@
 # "#o" = ITALIC
 # "#r" = RESET
 
-prefix: "#7[PassLock]"
+prefix: "#7[PassLock] "
 lockingInventoryTitle: "Entrez votre code :"
 priceTitle: " (coût : %c)"
 basicInventoryTitle: "Code :"
@@ -47,7 +47,7 @@ setLockable: "Cliquez sur le bloc que vous voulez rendre verrouillable"
 removeLockable: "Cliquez sur le bloc que vous voulez rendre non verrouillable"
 nowLockable: "Ce bloc est maintenant verrouillable"
 noLongerLockable: "Ce bloc n'est plus verrouillable"
-lockingLimitReached: "Vous avez atteint le nombre maximum de verrous."
+lockingLimitReached: "Vous avez atteint le nombre maximum de verrous. (%c/%l)"
 robbingAlert: "#c%player est entrain de voler votre %block en %location !"
 resetConfig: "#aConfiguration réinitialisée !"
 notEnoughMoney: "#cVous n'avez pas assez d'argent !"
