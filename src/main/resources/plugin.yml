@@ -1,6 +1,6 @@
 name: PassLock
 author: Kamereon
-version : 2.1
+version : 2.1.0
 main: io.github.stealthykamereon.passlock.PassLock
 api-version: 1.16
 depend: [Vault]
