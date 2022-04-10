@@ -3,6 +3,7 @@ author: Kamereon
 version : 1.16.2
 main: io.github.stealthykamereon.passlock.PassLock
 depend: [Vault]
+api-version: 1.16
 
 commands:
   passlock:

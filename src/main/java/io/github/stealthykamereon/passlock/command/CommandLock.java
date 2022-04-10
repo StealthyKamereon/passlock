@@ -1,7 +1,6 @@
 package io.github.stealthykamereon.passlock.command;
 
 import io.github.stealthykamereon.passlock.PassLock;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;

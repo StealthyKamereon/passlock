@@ -20,7 +20,7 @@ public class CommandUnsetLockable extends Command {
                 Player player = interactEvent.getPlayer();
                 Block block = interactEvent.getClickedBlock();
                 passLock.getLockableManager().removeLockable(block.getType());
-                player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("nowLockable")));
+                player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("noLongerLockable")));
                 interactEvent.setCancelled(true);
             }
         }

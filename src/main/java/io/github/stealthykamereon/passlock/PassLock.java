@@ -3,11 +3,7 @@ package io.github.stealthykamereon.passlock;
 import io.github.stealthykamereon.passlock.command.*;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.DoubleChest;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,8 +14,13 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
-
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -32,7 +33,8 @@ public class PassLock extends JavaPlugin{
     private LockManager lockManager;
     private LockableManager lockableManager;
     private InventoryManager inventoryManager;
-    private String helpMessage;
+    private WorldInteractor worldInteractor;
+    private List<String> helpMessage;
     private Permission permissionLock = new Permission("passlock.lock");
     private Permission permissionUnlock = new Permission("passlock.unlock");
     private Permission permissionOpen = new Permission("passlock.open");
@@ -54,11 +56,13 @@ public class PassLock extends JavaPlugin{
             this.getLogger().log(Level.SEVERE, "Can't load economy !");
 
         this.loadResources();
+        this.loadHelp();
 
         this.loadLocale();
         this.lockableManager = new LockableManager(this);
         this.lockManager = new LockManager(this);
         this.inventoryManager = new InventoryManager(this);
+        this.worldInteractor = new WorldInteractor();
         commandMap = new HashMap<>();
 
         listener = new EventListener(this);
@@ -83,6 +87,16 @@ public class PassLock extends JavaPlugin{
         generateDirectory("locales");
         generateFile("locales/en_EN.yml");
         generateFile("locales/fr_FR.yml");
+    }
+
+    private void loadHelp() {
+        try {
+            helpMessage = Files.readAllLines(Paths.get(getDataFolder().getAbsolutePath()+"/helpCommand.txt"), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+            helpMessage = new ArrayList<String>();
+            helpMessage.add("#l#cError loading help message");
+        }
     }
 
     private void generateDirectory(String name) {
@@ -213,7 +227,9 @@ public class PassLock extends JavaPlugin{
                 p.sendMessage(formatMessage(localeManager.getString("ownerAsking")));
                 break;
             case "help":
-                p.sendMessage(helpMessage);
+                for (String line : helpMessage) {
+                    p.sendMessage(ChatColor.translateAlternateColorCodes('#', line));
+                }
                 break;
             default:
                 commandSuccessful = false;
@@ -230,32 +246,17 @@ public class PassLock extends JavaPlugin{
     public List<String> getMaterialNames(List<Material> materials){
         List<String> materialNames = new LinkedList<>();
         for (Material mat : materials)
-            materialNames.add(mat.name());
+            materialNames.add(mat.toString());
         return materialNames;
     }
 
-    public Location getDoorLocation(Block block){
-        if (lockableManager.isDoor(block.getRelative(BlockFace.UP).getType()))
-            return block.getLocation();
-        else
-            return block.getRelative(BlockFace.DOWN).getLocation();
-    }
-
-    public Location getDoubleChestLocation(Block block){
-        DoubleChest doubleChest = (DoubleChest)block.getState();
-        return doubleChest.getLocation();
-    }
-
-    public Location getLockingLocation(Block block) {
-        if (getLockableManager().isDoor(block.getType()))
-            return getDoorLocation(block);
-        if (getLockableManager().isDoubleChest(block))
-            return getDoubleChestLocation(block);
-        return block.getLocation();
-    }
 
     public LockManager getLockManager() {
         return this.lockManager;
+    }
+
+    public WorldInteractor getWorldInteractor() {
+        return this.worldInteractor;
     }
 
     public LockableManager getLockableManager() {

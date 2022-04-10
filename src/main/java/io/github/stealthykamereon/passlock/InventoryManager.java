@@ -1,12 +1,12 @@
 package io.github.stealthykamereon.passlock;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
@@ -36,12 +36,12 @@ public class InventoryManager {
     }
 
     public Inventory createBasicInventory(Player owner, Block block){
-        Location location = passLock.getLockingLocation(block);
+        Location location = passLock.getWorldInteractor().getLockingLocation(block);
         return createInventory(owner, location, passLock.getLocaleManager().getString("basicInventoryTitle"));
     }
 
     public Inventory createLockingInventory(Player owner, Block block){
-        Location location = passLock.getLockingLocation(block);
+        Location location = passLock.getWorldInteractor().getLockingLocation(block);
         String title = passLock.getLocaleManager().getString("lockingInventoryTitle");
         if(passLock.getConfig().getBoolean("useEconomy")){
             title+= passLock.getLocaleManager().getString("priceTitle").replace("%c", passLock.getLockManager().getLockPrice(owner)+"");
@@ -93,7 +93,7 @@ public class InventoryManager {
     }
 
     public Inventory getWatchingInventory(Block block, Player p){
-        Location location = passLock.getLockingLocation(block);
+        Location location = passLock.getWorldInteractor().getLockingLocation(block);
         String title = passLock.getLocaleManager().getString("watchTitle").replace("%p", passLock.getLockManager().getLockOwner(block).getDisplayName());
         Inventory inv = Bukkit.createInventory(p, 54, title);
         Chest chest = (Chest)location.getBlock().getState();
@@ -102,7 +102,7 @@ public class InventoryManager {
     }
 
     public Inventory getChangingInventory(Player owner){
-        Inventory inventory = Bukkit.createInventory(owner, InventoryType.HOPPER, passLock.getLocaleManager().getString("changeTitle"));
+        Inventory inventory = Bukkit.createInventory(owner, InventoryType.HOPPER, passLock.getLocaleManager().getString("changingInventoryTitle"));
 
         ItemStack nullItem = new ItemStack(Material.BARRIER,1);
         ItemMeta nullMeta = nullItem.getItemMeta();
@@ -176,6 +176,78 @@ public class InventoryManager {
             return location.getBlock();
         }
         return null;
+    }
+
+    private void alertOwner(Block block, Player robber) {
+        Player owner = passLock.getLockManager().getLockOwner(block);
+        if (!owner.equals(robber)) {
+            Location location = block.getLocation();
+            String message = passLock.getLocaleManager().getString("robbingAlert")
+                    .replace("%player", robber.getDisplayName())
+                    .replace("%block", block.getType().name())
+                    .replace("%location", String.format("(%d, %d, %d)", location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+            owner.sendMessage(passLock.formatMessage(message));
+        }
+    }
+
+    public void handleInventoryEvent(InventoryClickEvent event) {
+        ItemStack itemStackClicked = event.getCurrentItem();
+        ItemMeta itemMeta = itemStackClicked.getItemMeta();
+        if (itemMeta != null) {
+            String itemName = itemMeta.getDisplayName();
+            if (this.isCodeItem(itemName)) {
+                this.handleCodeItem(event, itemStackClicked, itemMeta);
+            } else if (isConfirmationItem(itemName)) {
+                this.handleConfirmationItem(event, itemStackClicked, itemMeta);
+            } else if (isBarrierItem(itemName)) {
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    private void handleCodeItem(InventoryClickEvent event, ItemStack itemStack, ItemMeta itemMeta) {
+        event.setCancelled(true);
+        if (event.getClick().isLeftClick() && itemStack.getAmount() < passLock.getConfig().getInt("itemMaxAmount"))
+            itemStack.setAmount(itemStack.getAmount() + 1);
+        else if (event.getClick().isRightClick() && itemStack.getAmount() > 1)
+            itemStack.setAmount(itemStack.getAmount() - 1);
+    }
+
+    private void handleConfirmationItem(InventoryClickEvent event, ItemStack itemStack, ItemMeta itemMeta) {
+        Player player = (Player) event.getWhoClicked();
+        boolean newInventoryOpened = false;
+        if (isBasicInventory(event.getView())) {
+            int[] password = passLock.getInventoryManager().getPassword(event.getView());
+            Block lockedBlock = getBlockFromConfirmationItem(itemStack);
+            if (passLock.getLockManager().isPasswordCorrect(lockedBlock, password)) {
+                newInventoryOpened = passLock.getLockManager().openLockedBlock(lockedBlock, player);
+                event.setCancelled(true);
+            } else {
+                player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("wrongCode")));
+                if (passLock.getConfig().getBoolean("ownerAlerted")) {
+                    alertOwner(lockedBlock, player);
+                }
+            }
+        } else if (isLockingInventory(event.getView())) {
+            int[] password = getPassword(event.getView());
+            Block blockToLock = getBlockFromConfirmationItem(itemStack);
+            if (passLock.getConfig().getBoolean("useEconomy")) {
+                if (passLock.getEconomy().has(player, passLock.getLockManager().getLockPrice(player))) {
+                    passLock.getEconomy().withdrawPlayer(player, passLock.getLockManager().getLockPrice(player));
+                    passLock.getLockManager().lock(blockToLock, player, password);
+                    player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("blockLocked")));
+                } else{
+                    player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("notEnoughMoney")));
+                }
+            } else {
+                passLock.getLockManager().lock(blockToLock, player, password);
+                player.sendMessage(passLock.formatMessage(passLock.getLocaleManager().getString("blockLocked")));
+            }
+        }
+        event.setCancelled(true);
+        if (!newInventoryOpened) {
+            player.closeInventory();
+        }
     }
 
 }

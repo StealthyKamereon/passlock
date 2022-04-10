@@ -36,6 +36,10 @@ public class LocaleManager {
     }
 
     public String getString(String key){
-        return locale.get(key);
+        String value = locale.get(key);
+        if (value == null) {
+            System.out.println(String.format("WARNING : Unknown locale message %s !", key));
+        }
+        return value;
     }
 }
