@@ -1,6 +1,6 @@
 name: PassLock
 author: Kamereon
-version : 1.16.2
+version : 2.1
 main: io.github.stealthykamereon.passlock.PassLock
 depend: [Vault]
 api-version: 1.16
@@ -8,4 +8,4 @@ api-version: 1.16
 commands:
   passlock:
     description: Basic command for passlock
-    usage: /passlock [lock|unlock|help|...]
+    usage: "Usage: /<command> [lock|unlock|help|...]"
