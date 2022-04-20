@@ -203,7 +203,7 @@ public class InventoryManager {
                 this.handleCodeItem(event, itemStackClicked, itemMeta);
             } else if (isConfirmationItem(itemName)) {
                 this.handleConfirmationItem(event, itemStackClicked, itemMeta);
-            } else if (isBarrierItem(itemName)) {
+            } else if (isBarrierItem(itemName) || !isChangingInventory(event.getView())) {
                 event.setCancelled(true);
             }
         }
