@@ -44,7 +44,7 @@ public class PassLock extends JavaPlugin {
         ConfigurationSerialization.registerClass(Lock.class);
         this.lockManager = new LockManager(this);
         this.inventoryManager = new InventoryManager(this);
-        this.worldInteractor = new WorldInteractor();
+        this.worldInteractor = new WorldInteractor(this);
         commandMap = new HashMap<>();
 
         this.getCommand("lock").setExecutor(new LockCommand(this));

@@ -2,6 +2,7 @@ locale: "en_EN"
 ownerNeedCode: true
 itemMaxAmount: 9
 lockingLimitEnabled: false
+defaultDoorClosingTimeSeconds: 5.0
 ownerAlerted: true
 useEconomy: false
 unlockingPaysBack: true

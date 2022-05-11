@@ -69,9 +69,15 @@ public class EventListener implements Listener {
                         } catch (ClassCastException ignored) {}
                     // The player want to open and is the owner
                     } else if (passLock.getLockManager().isOwner(player, block) && !passLock.getConfig().getBoolean("ownerNeedCode")) {
+                        if (passLock.getWorldInteractor().canBeClosed(block)) {
+                            passLock.getWorldInteractor().clearDoorClosing(block);
+                        } else if (passLock.getWorldInteractor().isOpenable(block)) {
+                            passLock.getWorldInteractor().registerDoorClosing(block, player);
+                        }
                         e.setCancelled(false);
                     } else if (player.hasPermission("passlock.open")) {
                         if (passLock.getWorldInteractor().canBeClosed(block)) {
+                            passLock.getWorldInteractor().clearDoorClosing(block);
                             return;
                         } else {
                             player.openInventory(passLock.getInventoryManager().createBasicInventory(player, block));

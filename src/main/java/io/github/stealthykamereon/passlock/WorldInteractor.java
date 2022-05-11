@@ -10,8 +10,22 @@ import org.bukkit.block.data.type.Chest;
 import org.bukkit.block.data.type.Door;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class WorldInteractor {
+
+    private PassLock passLock;
+
+    private Map<Location, BukkitTask> doorClosingTasks;
+
+    public WorldInteractor(PassLock passLock) {
+        this.passLock = passLock;
+        doorClosingTasks = new HashMap<>();
+    }
 
     public boolean isDoubleChest(Block block){
         return block.getState() instanceof DoubleChest;
@@ -56,12 +70,42 @@ public class WorldInteractor {
         } catch (ClassCastException e) {}
     }
 
-    public void openBlock(Block block) {
+    public void openBlock(Block block, Player player) {
         try {
             Openable openable = (Openable) block.getBlockData();
             openable.setOpen(true);
             block.setBlockData(openable);
+            registerDoorClosing(block, player);
         } catch (ClassCastException e) {}
+    }
+
+    public void registerDoorClosing(Block block, Player player) {
+        try {
+            long delay = passLock.getLockManager().getDoorClosingTime(player);
+            if (delay > 0) {
+                Block blockToBeLocked = player.getWorld().getBlockAt(getLockingLocation(block));
+                BukkitTask task = new BukkitRunnable(){
+                    @Override
+                    public void run() {
+                        Openable openable = (Openable) blockToBeLocked.getBlockData();
+                        openable.setOpen(false);
+                        blockToBeLocked.setBlockData(openable);
+                    }
+                }.runTaskLater(passLock, delay);
+                if (doorClosingTasks.containsKey(blockToBeLocked.getLocation())) {
+                    doorClosingTasks.get(blockToBeLocked.getLocation()).cancel();
+                }
+                doorClosingTasks.put(blockToBeLocked.getLocation(), task);
+            }
+        } catch (ClassCastException e) {}
+    }
+
+    public void clearDoorClosing(Block block) {
+        Location lockingLocation = getLockingLocation(block);
+        if (doorClosingTasks.containsKey(lockingLocation)) {
+            doorClosingTasks.get(lockingLocation).cancel();
+            doorClosingTasks.remove(lockingLocation);
+        }
     }
 
     public Location getDoorLocation(Block block) {

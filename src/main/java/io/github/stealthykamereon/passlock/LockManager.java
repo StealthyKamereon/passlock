@@ -78,7 +78,7 @@ public class LockManager {
 
     public boolean openLockedBlock(Block blockToOpen, Player player) {
         if (passLock.getWorldInteractor().isOpenable(blockToOpen)) {
-            passLock.getWorldInteractor().openBlock(blockToOpen);
+            passLock.getWorldInteractor().openBlock(blockToOpen, player);
             return false;
         } else if (passLock.getWorldInteractor().hasInventory(blockToOpen)) {
             passLock.getWorldInteractor().openBlockInventory(blockToOpen, player);
@@ -135,6 +135,17 @@ public class LockManager {
         Expression exp = new Expression(priceExpression);
         BigDecimal result = exp.eval();
         return result.floatValue();
+    }
+
+    public long getDoorClosingTime(Player p) {
+        try {
+            double defaultDelay = passLock.getConfig().getDouble("defaultDoorClosingTimeSeconds");
+            return (long)defaultDelay*20;
+        } catch (NullPointerException e) {
+            System.out.println("Missing config parameter 'defaultDoorClosingTimeSeconds' !");
+            System.out.println("Add it to make this message disappear.");
+        }
+        return 0;
     }
 
     public boolean isLocked(Block block){
